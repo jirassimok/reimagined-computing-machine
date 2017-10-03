@@ -1,0 +1,23 @@
+log/
+
+images.npy
+labels.npy
+
+# Python
+*.py[ocd]
+
+# JetBrains IDE files
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Emacs
+.dir-locals.el
+*~
+\#*\#
+.\#*
+
+# OS X
+.DS_Store
