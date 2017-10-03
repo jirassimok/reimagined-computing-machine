@@ -24,6 +24,7 @@ def main():
     model = Sequential() # declare model
     model.add(Dense(10, input_shape=(28*28, ), kernel_initializer='he_normal')) # first layer
     model.add(Activation('relu'))
+    # data.test[0].data[783]
     #
     #
     #
@@ -40,16 +41,20 @@ def main():
                   metrics=['accuracy'])
 
     # Train Model
-    history = model.fit(x_train, y_train,
-                        validation_data = (x_val, y_val),
-                        epochs=EPOCHS,
-                        batch_size=BATCH_SIZE)
+    history = model.fit(
+        np.vstack([img.data for img in data.test]),
+        np.vstack([img.oneHot() for img in data.test]),
+        validation_data=(
+            np.vstack([img.data for img in data.validation]),
+            np.vstack([img.oneHot() for img in data.validation])),
+        epochs=EPOCHS,
+        batch_size=BATCH_SIZE)
 
 
     # Report Results
 
     print(history.history)
-    model.predict()
+    # model.predict()
 
 
 if __name__ == '__main__':
