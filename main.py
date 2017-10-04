@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation
+from keras.layers import Dense
 import numpy as np
 
 from data import Data
@@ -22,17 +22,15 @@ def main():
     data = Data(IMAGE_FILE, LABEL_FILE) # Test data
 
     model = Sequential() # declare model
-    model.add(Dense(10, input_shape=(28*28, ), kernel_initializer='he_normal')) # first layer
-    model.add(Activation('relu'))
-    # data.test[0].data[783]
+    model.add(Dense(10, input_shape=(28*28, ), kernel_initializer='he_normal', activation='relu'))
+    model.add()
     #
     #
     #
     # Fill in Model Here
     #
     #
-    model.add(Dense(10, kernel_initializer='he_normal')) # last layer
-    model.add(Activation('softmax'))
+    model.add(Dense(10, kernel_initializer='he_normal', activation='softmax')) # last layer
 
 
     # Compile Model
