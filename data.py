@@ -3,11 +3,21 @@ File: data.py
 
 Data structores and input.
 """
+from collections import namedtuple
+from functools import reduce
+import itertools
+from operator import attrgetter as getter
 import random
 from typing import NamedTuple, List
-from warnings import warn
 
 import numpy as np
+
+MiniData = namedtuple("MiniData", ("training", "validation", "test"))
+
+def groupby(iterable, key=None):
+    """Version of itertools.groupby that sorts by the key first
+    """
+    return itertools.groupby(sorted(iterable, key=key), key=key)
 
 class Image(NamedTuple):
     "Represents an image and its value, with a unique identifier."
@@ -15,9 +25,9 @@ class Image(NamedTuple):
     of: int          # The number of which this is an image.
     id: int = None   # The index of this number in the input files, or None.
     def __str__(self):
-        return f"Image(of={self.of}, id={self.id}\n{image2str(self.data)}\n)"
+        return f"Image(of {self.of}, id={self.id}\n{image2str(self.data)}\n)"
 
-    def oneHot(self) -> np.ndarray:
+    def one_hot(self) -> np.ndarray:
         """Get the encoded number as a vector.
 
         For example, Image(..., 5) would become [0,0,0,0,0,1,0,0,0,0].
@@ -44,17 +54,49 @@ class Data(object):
         if training + validation + test != 100:
             raise ValueError("Sum of data sets is not 100")
         images = load_files(imagefile, labelfile)
-        onepercent = len(images) // 100
-        r = round(onepercent * training)
-        v = round(onepercent * validation)
-        # s = round(onepercent * test)
 
+
+        bynum = {i: tuple(imgs) for i, imgs in groupby(images, key=getter('of'))}
+
+        train = []
+        valid = []
+        test = []
+        testids = []
+        stats = {}
+        for num, nimages in bynum.items():
+            r = round(len(nimages) * training // 100)
+            v = round(len(nimages) * validation // 100)
+            train += nimages[:r]
+            valid += nimages[r:r+v]
+            test  += nimages[r+v:]
+            stats[num] = MiniData(r, v, len(nimages)-r-v)
+            print(f"{r:>3} {v:>3} {len(nimages)-r-v}")
+        # Now train, valid, and test are the data, ordered by number
+
+        # This is the best time to convert the lists into dicts, if you want to.
+
+        """
+         I want to support these access methods:
+        Get by number : int -> ImmutableCollection[Image]
+        -- Get by set    : (set ->) ImmutableCollection[Image]
+        Get set as dict: set -> { int: Image }
+        Get by both   : set -> int -> ImmutableCollection[Image]
+        Get as dict : -> { set: { int: Image } }
+        -- Get as set
+        """
+
+        data = train + valid + test
         Data._randomizer.seed(Data._default_seed if seed is None else seed)
-        random.shuffle(images)
+        Data._randomizer.shuffle(train)
+        Data._randomizer.shuffle(valid)
+        Data._randomizer.shuffle(test)
+        Data._randomizer.shuffle(data)
+        self._training = tuple(train)
+        self._validation = tuple(valid)
+        self._test = tuple(test)
+        self._alldata = tuple(data)
 
-        self._training = images[:r]
-        self._validation = images[r:r+v]
-        self._test = images[r+v:]
+        self.stats = stats
 
     @property
     def training(self): return self._training
@@ -62,6 +104,29 @@ class Data(object):
     def validation(self): return self._validation
     @property
     def test(self): return self._test
+    @property
+    def alldata(self): return self._alldata
+
+    def training_of(self, n: int):
+        "Get all training images of the given number."
+        return tuple(x for x in self.training if x.of == n)
+
+    def validation_of(self, n: int):
+        "Get all validation images of the given number."
+        return tuple(x for x in self.validation if x.of == n)
+
+    def test_of(self, n: int):
+        "Get all test images of the given number."
+        return tuple(x for x in self.test if x.of == n)
+
+    def images_of(self, n: int):
+        "Get all images of the given number."
+        return tuple(x for x in self.alldata if x.of == n)
+
+    def print_stats(self):
+        print('   TRN VAL TST', *(
+            f"{num}: {vals.training:>3} {vals.validation:>3} {vals.test:>3}"
+            for num, vals in self.stats.items()), sep='\n')
 
 def image2str(arr: np.ndarray, char='X', *, columns=28) -> str:
     """Convert image data from an array to a string.
