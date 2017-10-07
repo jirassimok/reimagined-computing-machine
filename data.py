@@ -99,11 +99,11 @@ class Data(object):
         self.stats = stats
 
     @property
-    def training(self): return self._training
+    def training(self) -> List[Image]: return self._training
     @property
-    def validation(self): return self._validation
+    def validation(self) -> List[Image]: return self._validation
     @property
-    def test(self): return self._test
+    def test(self) -> List[Image]: return self._test
     @property
     def alldata(self): return self._alldata
 
