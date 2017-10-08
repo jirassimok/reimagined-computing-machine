@@ -123,16 +123,23 @@ vary_batches = [
     , network(selu(), tanh()).epochs(8).batch_size(200)
 ]
 
-# This one takes almost no epochs to do very well.
-fast = network(tanh(n=COUNT*5, dist=og)).epochs(2).batch_size(60)
-
 
 # Narrowing by eighths
 narrowing = Network(*narrowing_by(lambda x: COUNT-(COUNT/8)*x))
 
 narrowing2 = Network(*narrowing_by(lambda x: (10*(COUNT/10)**((10-x)/10))))
 
+
+"""
+BEST NETWORKS
+"""
+
+# This one takes almost no epochs to do very well.
+fast = network(tanh(n=COUNT*5, dist=og)).epochs(2).batch_size(60)
+# It often hits 90% accuracy after just one epoch.
+
 def favorite(n: int) -> Network:
+    "Make a network consisting of a number of selu layers, and a tanh layer."
     return network(
         repeat(n, selu()),
         tanh()
@@ -143,4 +150,6 @@ ninety_four = favorite(4) # Hit 94 the first 3 times I ran it.
 
 final = favorite(3) # Submitted
 
+
+# 876543234 as a data seed gets excellent results from final (0.9382 on first epoch)
 # Test on image 5483, the stupid-looking number 1

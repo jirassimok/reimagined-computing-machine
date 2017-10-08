@@ -101,9 +101,15 @@ class Model(object):
         return confusion
 
     def test(self, image: Image):
+        "Test a single value, returning both actual and predicted value."
         result = self.model.predict(np.array([image.data]))
         guess = np.argmax(result)
         return image.of, guess
+
+    def testid(self, image: Image):
+        "Like test, but also returns the image's id."
+        a, b = self.test(image)
+        return a, b, image.id
 
 class Network(object):
     "Represents the layers of a model."
@@ -113,16 +119,16 @@ class Network(object):
         self._batch_size = batch_size
 
         if len(layers) == 0:
-            self.base_layers = [Layer(10, 'he_normal', 'softmax').as_first()]
-            self.layers = tuple(map(Layer.to_dense, self.base_layers))
+            self.layers = [Layer(10, 'he_normal', 'softmax').as_first()]
+            # self.layers = tuple(map(Layer.to_dense, self.base_layers))
             return
 
         base_layers  = [layers[0].as_first()]
         base_layers += layers[1:]
         base_layers.append(Layer(10, 'he_normal', 'softmax'))
 
-        self.base_layers = tuple(base_layers)
-        self.layers = tuple(map(Layer.to_dense, base_layers))
+        self.layers = tuple(base_layers)
+        # self.layers = tuple(map(Layer.to_dense, base_layers))
 
     def epochs(self, epochs: int):
         self._epochs = epochs
@@ -134,7 +140,7 @@ class Network(object):
 
     def get_model(self) -> Model:
         "Get a model based on these layers."
-        model = Sequential(self.layers) # declare model
+        model = Sequential(tuple(map(Layer.to_dense, self.layers)))
         model.compile(optimizer='sgd',
                       loss='categorical_crossentropy',
                       metrics=['accuracy'])
