@@ -70,7 +70,6 @@ class Data(object):
             valid += nimages[r:r+v]
             test  += nimages[r+v:]
             stats[num] = MiniData(r, v, len(nimages)-r-v)
-            print(f"{r:>3} {v:>3} {len(nimages)-r-v}")
         # Now train, valid, and test are the data, ordered by number
 
         # This is the best time to convert the lists into dicts, if you want to.
@@ -106,6 +105,9 @@ class Data(object):
     def test(self) -> List[Image]: return self._test
     @property
     def alldata(self): return self._alldata
+
+    def by_id(self, id: int):
+        return next(filter(lambda x: x.id == id, self._alldata))
 
     def training_of(self, n: int):
         "Get all training images of the given number."
@@ -148,6 +150,7 @@ def image2str(arr: np.ndarray, char='X', *, columns=28) -> str:
             dims += 1
     if dims == 1:
         arr = [arr[i:i+columns] for i in range(0, len(arr), columns)]
+        # for i in arr: print(' '.join(f'{x:>3}' for x in i)) # to print nicely as numbers
     elif dims != 2:
         raise ValueError("Can not convert many-dimensional array to string")
     return '\n'.join(''.join(char if i else ' ' for i in row) for row in arr)
